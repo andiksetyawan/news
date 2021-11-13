@@ -109,3 +109,52 @@ func TestPutTagRouteError(t *testing.T) {
 
 	assert.Equal(t, 500, w.Code)
 }
+
+func TestPostNewsRoute(t *testing.T) {
+	router := setupRouter()
+
+	request := model.NewsCreateRequest{
+		Title: "Test " + fmt.Sprint(time.Now().Unix()),
+		Text:  "Test",
+		Tags: []string{
+			"investasi", //slug id tag
+			"pendidikan",
+		},
+	}
+	requestByte, _ := json.Marshal(request)
+	requestReader := bytes.NewReader(requestByte)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/api/v1/news", requestReader)
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, 200, w.Code)
+}
+
+func TestGetNewsFilterTopicRoute(t *testing.T) {
+	router := setupRouter()
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/api/v1/news?topic=investasi", nil)
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, 200, w.Code)
+
+	var response bson.M
+	json.NewDecoder(w.Body).Decode(&response)
+
+	assert.Equal(t, response["success"], true)
+}
+
+func TestGetNewsFilterStatusRoute(t *testing.T) {
+	router := setupRouter()
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/api/v1/news?status=draft", nil)
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, 200, w.Code)
+
+	var response bson.M
+	json.NewDecoder(w.Body).Decode(&response)
+
+	assert.Equal(t, response["success"], true)
+}

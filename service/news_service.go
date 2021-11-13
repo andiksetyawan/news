@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"github.com/google/uuid"
 	"github.com/gosimple/slug"
 	"go.mongodb.org/mongo-driver/bson"
@@ -33,9 +34,16 @@ type newsService struct {
 }
 
 func (service *newsService) CreateNews(ctx context.Context, req model.NewsCreateRequest) error {
+	s := slug.Make(req.Title)
+
+	_, err := service.newsRepository.FindNewsBySlug(context.Background(), s)
+	if err == nil {
+		return errors.New("title / slug url already exist")
+	}
+
 	newNews := entity.News{
 		ID:        uuid.New().String(),
-		Slug:      slug.Make(req.Title),
+		Slug:      s,
 		Title:     req.Title,
 		Text:      req.Text,
 		Tags:      req.Tags,
@@ -44,7 +52,7 @@ func (service *newsService) CreateNews(ctx context.Context, req model.NewsCreate
 		UpdatedAt: 0,
 		DeletedAt: 0,
 	}
-	err := service.newsRepository.CreateNews(ctx, newNews)
+	err = service.newsRepository.CreateNews(ctx, newNews)
 
 	if err != nil {
 		return err
