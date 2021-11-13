@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"flag"
 	"log"
 	"net/http"
 	"os"
@@ -12,15 +13,20 @@ import (
 )
 
 func main() {
+	bindAddr := flag.String("bind", "127.0.0.1:8080", "bind to specific addr host:port")
+	flag.Parse()
+
 	r := setupRouter()
 	srv := &http.Server{
-		Addr:    ":9999",
+		Addr:    *bindAddr,
 		Handler: r,
 	}
 
 	go func() {
-		if err := srv.ListenAndServe(); err != nil && errors.Is(err, http.ErrServerClosed) {
-			log.Printf("listen: %s\n", err)
+		log.Printf("listen: %s\n", *bindAddr)
+		err := srv.ListenAndServe()
+		if err != nil && errors.Is(err, http.ErrServerClosed) {
+			log.Printf("error : %s\n", err)
 		}
 	}()
 
