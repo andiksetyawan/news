@@ -6,4 +6,4 @@ _change environment / export, shortcut in `env.sh` file_
 ## RUN
 `go mod tidy`
 
-`go run .`
+`go run . -bind=0.0.0.0:9000`
