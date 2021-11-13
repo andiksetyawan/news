@@ -15,6 +15,7 @@ type NewsRepository interface {
 	UpdateNewsByID(ctx context.Context, payload model.NewsUpdate, id string) error
 	FindNews(ctx context.Context, filter bson.M) (*[]entity.News, error)
 	DeleteNewsByID(ctx context.Context, id string) error
+	FindNewsBySlug(ctx context.Context, slug string) (*entity.News, error)
 }
 
 type newsRepository struct {
@@ -61,6 +62,20 @@ func (repository *newsRepository) FindNews(ctx context.Context, filter bson.M) (
 
 	var news []entity.News
 	cur.All(ctx, &news)
+	return &news, nil
+}
+
+func (repository *newsRepository) FindNewsBySlug(ctx context.Context, slug string) (*entity.News, error) {
+	filter := bson.M{"slug": slug}
+	filter["$or"] = []bson.M{
+		{"deleted_at": 0},
+		{"deleted_at": bson.M{"$exists": false}},
+	}
+	var news entity.News
+	err := repository.Db.FindOne(ctx, filter).Decode(&news)
+	if err != nil {
+		return nil, err
+	}
 	return &news, nil
 }
 
